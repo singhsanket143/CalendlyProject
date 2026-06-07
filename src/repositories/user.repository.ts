@@ -23,3 +23,12 @@ export async function create(userData: {name: string, email: string}) {
     });
     return user;
 }
+
+export async function deleteUserWithId(id: number) {
+    const user = await prisma.user.delete({
+        where: {
+            id
+        }
+    });
+    return user;
+}

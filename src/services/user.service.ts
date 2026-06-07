@@ -1,4 +1,4 @@
-import { create, getAll, getById } from "../repositories/user.repository.js";
+import { create, getAll, getById, deleteUserWithId } from "../repositories/user.repository.js";
 
 export async function findAllUsers() {
     const users = await getAll();
@@ -16,5 +16,10 @@ export async function findById(id: number) {
 
 export async function createUser(userData: {name: string, email: string}) {
     const user = await create(userData);
+    return user;
+}
+
+export async function deleteUser(id: number) {
+    const user = await deleteUserWithId(id);
     return user;
 }
