@@ -13,3 +13,13 @@ export async function getById(id: number) {
     });
     return user;
 }
+
+export async function create(userData: {name: string, email: string}) {
+    const user = await prisma.user.create({
+       data: {
+        name: userData.name,
+        email: userData.email
+       }
+    });
+    return user;
+}
