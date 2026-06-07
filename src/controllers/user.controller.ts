@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createUser as createUserService, deleteUser as deleteUserService, findAllUsers as findAllUsersService, findById as findByIdService} from "../services/user.service.js";
+import { createUser as createUserService, deleteUser as deleteUserService, findAllUsers as findAllUsersService, findById as findByIdService, updateUser as updateUserService } from "../services/user.service.js";
 
 export async function findAllUsers(_req: Request, res: Response) {
     const response = await findAllUsersService();
@@ -24,4 +24,10 @@ export async function deleteUser(req: Request, res: Response) {
         msg: "Successfully deleted user",
         user
     });
+}
+
+export async function updateUser(req: Request, res: Response) {
+    const { id } = req.params;
+    const user = await updateUserService(Number(id), req.body);
+    res.json(user);
 }
