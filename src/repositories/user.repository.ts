@@ -13,3 +13,35 @@ export async function getById(id: number) {
     });
     return user;
 }
+
+export async function create(userData: {name: string, email: string}) {
+    const user = await prisma.user.create({
+       data: {
+        name: userData.name,
+        email: userData.email
+       }
+    });
+    return user;
+}
+
+export async function deleteUserWithId(id: number) {
+    const user = await prisma.user.delete({
+        where: {
+            id
+        }
+    });
+    return user;
+}
+
+export async function updateUserWithId(id: number, userData: {name: string, email: string}) {
+    const user = await prisma.user.update({
+        where: {
+            id
+        },
+        data: {
+            name: userData.name,
+            email: userData.email
+        }
+    });
+    return user;
+}
