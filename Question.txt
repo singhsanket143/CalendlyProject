@@ -1,0 +1,17 @@
+Hi Sir,
+Just a quick question,
+I tried to search with AI, but was still confused a bit..
+
+Q. I got that Number() is used to convert a string to a number in Runtime, 
+but in the code while receiving the req.params.id for lets say the Repository,
+we do use: number -> as a TS datatype..
+so then why cant we do with Number?
+
+I tried and it gave:
+Argument of type 'Number' is not assignable to parameter of type 'number'.
+  'number' is a primitive, but 'Number' is a wrapper object. Prefer using 'number' when possible.ts(2345)
+
+Meaning that I can't use Number (JS - used to convert strings to numbers in runtime) in place of number (TS - type), 
+but still passing like: const user = await deleteUserService(Number(id)); is fine?
+
+And trying vice versa like: number(id), I get: 'number' only refers to a type, but is being used as a value here.ts(2693)
