@@ -25,7 +25,7 @@ export async function findByEmail(email: string) {
     return user;
 }
 
-export async function create(data: CreateUserDto) {
+export async function create(data: CreateUserDto & { slug: string}) {
     const user = await prisma.user.create({
         data
     });
@@ -45,4 +45,13 @@ export async function remove(id: number) {
         where: { id }
     });
     return user;
+}
+
+export async function slugExistsForUser(slug: string) {
+    const existing = await prisma.user.count({
+        where: {
+            slug
+        }
+    });
+    return existing > 0;
 }
