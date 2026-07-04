@@ -6,6 +6,7 @@ import {
     listEventTypes as listEventTypesService,
     removeEventType as removeEventTypeService,
     updateEventType as updateEventTypeService,
+    getUserSlots,
 } from "../services/event-types.service.js";
 import { sendSuccess } from "../utils/api-response.js";
 
@@ -41,4 +42,11 @@ export async function getPublicEventType(req: Request, res: Response) {
     const { userId, slug } = req.params;
     const eventType = await getEventTypePublicService(Number(userId), String(slug));
     sendSuccess(res, eventType);
+}
+
+export async function getPublicUserSlots(req: Request, res: Response) {
+    const { userId } = req.params;
+    const { eventTypeId, from, to } = req.query;
+    const slots = await getUserSlots(Number(userId), Number(eventTypeId), String(from), String(to));
+    sendSuccess(res, slots);
 }

@@ -3,6 +3,9 @@ import { CreateEventTypeDto, UpdateEventTypeDto } from "../dtos/event-type.dto.j
 import { create, findActiveByHostIdAndEventSlug, findByHostId, getById, remove, slugExistsForHost, update } from "../repositories/event-type.repository.js";
 import { conflict, forbidden, notFound } from "../utils/api-error.js";
 import { getById as getUserById } from "../repositories/user.repository.js";
+import { findActiveRulesByUser, findExceptionsByUser } from "../repositories/availability.repository.js";
+import { findBookedSlotsByHostInRange } from "../repositories/slot.repository.js";
+import moment from "moment";
 
 
 export async function listEventTypes(hostId: number) {
@@ -91,4 +94,74 @@ export async function getEventTypePublic(hostId: number, eventSlug: string) {
             email: host.email,
         }
     }
+}
+
+export async function getUserSlots(userId: number, eventTypeId: number, from: string, to: string) {
+    const eventType = await getById(eventTypeId);
+    if(!eventType) {
+        throw notFound('Event type not found');
+    }
+    if(eventType.hostId !== userId) {
+        throw forbidden('You are not authorized to view slots for this event type');
+    }
+
+    const duration = eventType.durationMinutes;
+
+    const rangeStart = moment(from).startOf('day');
+    const rangeEnd = moment(to).startOf('day');
+    const totalDays = rangeEnd.diff(rangeStart, 'days');
+
+    const rules = await findActiveRulesByUser(userId);
+    const exceptions = await findExceptionsByUser(userId);
+    const bookedSlots = await findBookedSlotsByHostInRange(
+        userId,
+        rangeStart.toDate(),
+        rangeEnd.clone().endOf('day').toDate()
+    );
+
+    const ans = [];
+
+    for(let i = 0; i <= totalDays; i++) {
+        const thatDate = rangeStart.clone().add(i, 'days');
+        const dateKey = thatDate.format('YYYY-MM-DD');
+
+        const exception = exceptions.find((e) => moment(e.date).format('YYYY-MM-DD') === dateKey);
+
+        if(exception?.type === 'BLOCK_FULL_DAY') {
+            continue;
+        }
+
+        const dayRules = rules.filter((r) => r.weekday === thatDate.day());
+
+        for(const rule of dayRules) {
+            const dayStart = moment(`${dateKey} ${rule.startTime}`, 'YYYY-MM-DD HH:mm');
+            const dayEnd = moment(`${dateKey} ${rule.endTime}`, 'YYYY-MM-DD HH:mm');
+
+            const current = dayStart.clone();
+
+            while(current.clone().add(duration, 'minutes').isSameOrBefore(dayEnd)) {
+                const slotStart = current.clone();
+                const slotEnd = slotStart.clone().add(duration, 'minutes');
+
+                const blockedByException = exception?.type === 'BLOCK_PARTIAL'
+                    && slotStart.isBefore(moment(`${dateKey} ${exception.endTime}`, 'YYYY-MM-DD HH:mm'))
+                    && slotEnd.isAfter(moment(`${dateKey} ${exception.startTime}`, 'YYYY-MM-DD HH:mm'));
+
+                const blockedByBooking = bookedSlots.some((b) =>
+                    slotStart.isBefore(moment(b.endAt)) && slotEnd.isAfter(moment(b.startAt))
+                );
+
+                if(!blockedByException && !blockedByBooking) {
+                    ans.push({
+                        start: slotStart.format('YYYY-MM-DD HH:mm'),
+                        end: slotEnd.format('YYYY-MM-DD HH:mm'),
+                    });
+                }
+
+                current.add(duration, 'minutes');
+            }
+        }
+    }
+
+    return ans;
 }
