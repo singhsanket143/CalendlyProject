@@ -2,6 +2,7 @@
 
 import express, { Express } from 'express';
 import { availabilityRouter } from './routers/availability.router.js';
+import { bookingRouter } from './routers/booking.router.js';
 import { eventTypeRouter } from './routers/event-type.router.js';
 import { publicEventRouter } from './routers/public-event.router.js';
 import { userRouter } from './routers/user.router.js';
@@ -29,6 +30,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/users', userRouter); // if the route starts with /users, userRouter will handle it
 app.use('/api/availability', availabilityRouter);
 app.use('/api/event-types', eventTypeRouter);
+app.use('/api/bookings', bookingRouter);
 app.use('/api/public', publicEventRouter);
 
 app.use(routeNotFound);
