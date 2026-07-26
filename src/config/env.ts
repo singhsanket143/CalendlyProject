@@ -1,5 +1,9 @@
 import 'dotenv/config';
 
+function sanitizeEnvValue(value: string): string {
+    return value.replace(/^["']+|["',]+$/g, '').trim();
+}
+
 export const PORT = process.env.PORT || 3000;
 export const DATABASE_URL = process.env.DATABASE_URL || '';
 export const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -22,3 +26,5 @@ export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 export const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || '';
 export const GOOGLE_SENDER_EMAIL = process.env.GOOGLE_SENDER_EMAIL || 'info@example.com';
+export const GOOGLE_REFRESH_TOKEN = sanitizeEnvValue(process.env.GOOGLE_REFRESH_TOKEN || '');
+export const GOOGLE_CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary';

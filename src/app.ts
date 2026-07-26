@@ -8,6 +8,7 @@ import { publicEventRouter } from './routers/public-event.router.js';
 import { userRouter } from './routers/user.router.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { routeNotFound } from './middlewares/route-not-found.js';
+import { googleIntegrationRouter } from './routers/google.router.js';
 
 const app: Express = express();
 
@@ -32,6 +33,7 @@ app.use('/api/availability', availabilityRouter);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/event-types', eventTypeRouter);
 app.use('/api/public', publicEventRouter);
+app.use('/api/integrations/google', googleIntegrationRouter);
 
 app.use(routeNotFound);
 // at the last we mention our error handling middleware
