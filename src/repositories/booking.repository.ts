@@ -1,6 +1,7 @@
 import { prisma } from "../config/database.js";
 import { getDbClient, type DbClient } from "./db-client.js";
 
+
 export interface ListHostBookingsFilters {
     status?: string;
     from?: Date;
@@ -88,4 +89,19 @@ export async function updateBookingCalendarDetails(
         where: { id: bookingId },
         data,
     });
+}
+
+export async function cancelBookedSlot(bookingId: number, db?: DbClient) {
+
+    const client = getDbClient(db);
+
+    const updatedBooking = await client.booking.update({
+        where: { id: bookingId },
+        data: { status: "CANCELLED" },
+        include: {
+            slot: true,
+        },
+    });
+
+    return updatedBooking;
 }

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { ListHostBookingsQuery } from "../dtos/booking.dto.js";
 import {
+    cancelBooking,
     createBookingOptimistically,
     createBookingPessimistically,
     listHostBookings as listHostBookingsService,
@@ -15,4 +16,13 @@ export async function create(req: Request, res: Response) {
 export async function list(req: Request, res: Response) {
     const result = await listHostBookingsService(req.userId, req.query as ListHostBookingsQuery);
     sendSuccess(res, result);
+}
+
+export async function cancel(req: Request, res: Response) {
+    
+    const {bookingId} = req.params
+    
+    await cancelBooking(req.userId,Number(bookingId))
+
+    sendSuccess(res,"Booking cancelled successfully");
 }

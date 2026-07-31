@@ -13,3 +13,16 @@ export async function sendBookingConfirmationEmail(bookingId: number) {
         <p>Thank you for booking with us.</p>
     `);
 }
+
+export async function sendCancelBookingConfirmationEmail(bookingId: number) {
+    
+    const booking = await findBookingById(bookingId);
+
+    if(!booking || booking.status!=="CANCELLED") return;
+
+    await sendEmail(booking.inviteeEmail,`Cancel Booking Confirmation : ${bookingId}`, `
+        <p>Hello ${booking.inviteeName},</p>
+        <p>Your booking for ${booking.eventType.title} on ${booking.slot.startAt.toUTCString()} has been cancelled.</p>
+        <p>Thank you for booking with us.</p>
+    `);
+}

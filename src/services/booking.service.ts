@@ -1,16 +1,18 @@
 import { DateTime } from "luxon";
 import { prisma } from "../config/database.js";
 import { CreateBookingDto, ListHostBookingsQuery } from "../dtos/booking.dto.js";
-import { createBooking, findHostBookings } from "../repositories/booking.repository.js";
+import { cancelBookedSlot, createBooking, findHostBookings } from "../repositories/booking.repository.js";
 import {
     findSlotById,
     lockSlotForUpdate,
     markSlotBooked,
     markSlotBookedIfAvailable,
+    updateSlotStatus,
 } from "../repositories/slot.repository.js";
 import { badRequest, notFound } from "../utils/api-error.js";
 import type { Booking, Slot } from "../../generated/prisma/client.js";
 import {
+    startCancelBookingNotificationWorkflow,
     startCreateGoogleCalendarEventWorkflow,
     startRegenerateHostSlotsWorkflow,
     startSendBookingConfirmationEmailWorkflow,
@@ -169,4 +171,57 @@ export async function listHostBookings(hostId: number, query: ListHostBookingsQu
     return {
         bookings: bookings.map(formatBookingListItem),
     };
+}
+
+
+
+async function postCancelBookingActions(hostId:number,booking:{
+    id: number;
+    status: string;
+    slot: { startAt: Date; endAt: Date };
+}){
+
+    await triggerSlotRegen(hostId,booking.slot.startAt);
+    
+    await startCancelBookingNotificationWorkflow(booking.id);
+
+    return formatBookingResponse(booking)
+}
+
+
+export async function cancelBooking( hostId:number,bookingId: number) {
+    const cancelledBooking = await prisma.$transaction(
+        async (tx) => {
+
+            const booking = await tx.booking.findUnique({
+                where: { id: bookingId },
+                include: {
+                    slot: true,
+                },
+            });
+
+            if (!booking) {
+                throw  badRequest("Booking not found");
+            }
+
+            if (booking.status === "CANCELLED") {
+                throw  badRequest("Booking already cancelled");
+            }
+
+            const slotStartAt = DateTime.fromJSDate(booking.slot.startAt,{zone:'utc'})
+            
+            if (DateTime.now().toUTC() >= slotStartAt) {
+                throw badRequest("Cannot cancel a booking that has already started");
+            }
+
+           const updatedBooking =  await cancelBookedSlot(bookingId, tx);
+
+           await updateSlotStatus(updatedBooking.slotId,tx)
+
+           return updatedBooking
+        }
+    )
+
+    
+    return postCancelBookingActions(hostId,cancelledBooking)
 }

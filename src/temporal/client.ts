@@ -48,6 +48,15 @@ export async function startSendBookingConfirmationEmailWorkflow(bookingId: numbe
     )
 }
 
+export async function startCancelBookingNotificationWorkflow(bookingId: number) {
+    return startWorkflow(
+        'sendCancelledBookingNotificationWorkflow',
+        `send-cancel-booking-confirmation-email-${bookingId}-${Date.now()}`,
+        [bookingId]
+    )
+}
+
+
 export async function startCreateGoogleCalendarEventWorkflow(bookingId: number) {
     return startWorkflow(
         'createGoogleCalendarEventWorkflow',
@@ -55,3 +64,4 @@ export async function startCreateGoogleCalendarEventWorkflow(bookingId: number) 
         [bookingId]
     );
 }
+

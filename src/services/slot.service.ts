@@ -2,10 +2,10 @@ import { DateTime } from "luxon";
 import { SLOT_GENERATION_DAYS } from "../config/env.js";
 import { findActiveRulesByUser, findExceptionsByUserInRange } from "../repositories/availability.repository.js";
 import { findActiveEventTypesByHost } from "../repositories/event-type.repository.js";
-import { blockSlot, findBookedSlotsByHostInRange, findFutureSlotsByEventTypeInRange, upsertAvailableSlot } from "../repositories/slot.repository.js";
+import { blockSlot, bulkUpsertAvailableSlots, findBookedSlotsByHostInRange, findFutureSlotsByEventTypeInRange, upsertAvailableSlot } from "../repositories/slot.repository.js";
 import { getById as getUserById } from "../repositories/user.repository.js";
 import { applyExceptionsForDate, overlapsBooked, splitIntoSlots, TimeWindow, windowsForWeekdayRule } from "./slot-generation.service.js";
-
+import { createId  } from "@paralleldrive/cuid2";
 export interface RegenerateHostSlotsInput {
     hostId: number;
     from?: string; // YYYY-MM-DD
@@ -76,16 +76,45 @@ export async function regenerateHostSlots(input: RegenerateHostSlotsInput) {
                 (slot) => slot.start > DateTime.utc() && !overlapsBooked(slot, bookedWindows, eventType.bufferBeforeMinutes, eventType.bufferAfterMinutes)
             ); // slots filtered to exclude past slots and slots that overlap with booked slots
             // I dont like this query too much.
-            for(const slot of slots) {
+            
+            // for(const slot of slots) {
+            //     const startAt = slot.start.toUTC().toJSDate();
+            //     const endAt = slot.end.toUTC().toJSDate();
+
+            //     const key = `${eventType.id}|${startAt.toISOString()}|${endAt.toISOString()}`;
+
+            //     generatedValidSlotKeys.add(key);
+
+            //     await upsertAvailableSlot(input.hostId, eventType.id, startAt, endAt);
+            // }
+
+            
+            const rows = []
+            
+            for (const slot of slots){
+                
+                const now = new Date()
+
                 const startAt = slot.start.toUTC().toJSDate();
+                
                 const endAt = slot.end.toUTC().toJSDate();
-
-                const key = `${eventType.id}|${startAt.toISOString()}|${endAt.toISOString()}`;
-
-                generatedValidSlotKeys.add(key);
-
-                await upsertAvailableSlot(input.hostId, eventType.id, startAt, endAt);
+                
+                const key = `${eventType.id}|${startAt.toISOString()}|${endAt.toISOString()}`
+                
+                generatedValidSlotKeys.add(key)
+                
+                rows.push({
+                        id: createId(),
+                        hostId: input.hostId,
+                        eventTypeId: eventType.id,
+                        startAt,
+                        endAt,
+                        status: "AVAILABLE",
+                        updatedAt:now
+                    })
             }
+
+            await bulkUpsertAvailableSlots(rows);
         }
 
         const futureSlots = await findFutureSlotsByEventTypeInRange(
