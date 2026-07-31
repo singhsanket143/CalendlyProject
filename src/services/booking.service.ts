@@ -195,6 +195,9 @@ export async function cancelBooking( hostId:number,bookingId: number) {
 
             const booking = await tx.booking.findUnique({
                 where: { id: bookingId },
+                include: {
+                    slot: true,
+                },
             });
 
             if (!booking) {
@@ -203,6 +206,12 @@ export async function cancelBooking( hostId:number,bookingId: number) {
 
             if (booking.status === "CANCELLED") {
                 throw  badRequest("Booking already cancelled");
+            }
+
+            const slotStartAt = DateTime.fromJSDate(booking.slot.startAt,{zone:'utc'})
+            
+            if (DateTime.now().toUTC() >= slotStartAt) {
+                throw badRequest("Cannot cancel a booking that has already started");
             }
 
            const updatedBooking =  await cancelBookedSlot(bookingId, tx);
