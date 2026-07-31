@@ -152,3 +152,14 @@ export async function markSlotBooked(id: string, db?: DbClient) {
         data: { status: "BOOKED" },
     });
 }
+
+
+export async function updateSlotStatus(slotId:string , db?: DbClient) {
+    
+    const client = getDbClient(db);
+
+    await client.slot.update({
+        where: { id: slotId },
+        data: { status: "AVAILABLE" },
+    });
+}
