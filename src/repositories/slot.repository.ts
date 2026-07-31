@@ -1,3 +1,4 @@
+import { Prisma } from "../../generated/prisma/client.js";
 import { prisma } from "../config/database.js";
 import { getDbClient, type DbClient } from "./db-client.js";
 
@@ -40,6 +41,54 @@ export async function upsertAvailableSlot(
         },
     });
 }
+
+export async function bulkUpsertAvailableSlots(rows:{id:string,hostId: number, eventTypeId: number, startAt: Date, endAt: Date, status: string,updatedAt:Date}[]){
+
+    if (rows.length === 0) return;
+
+    const values = []
+
+    for (const row of rows) {
+        
+        values.push(
+            Prisma.sql `
+            (
+                ${row.id},
+                ${row.hostId},
+                ${row.eventTypeId},
+                ${row.startAt},
+                ${row.endAt},
+                ${row.status},
+                ${row.updatedAt}
+            )`
+            );
+    }
+     
+
+
+    const query = Prisma.sql `
+
+                INSERT INTO "slots" ("id","hostId","eventTypeId","startAt","endAt","status","updatedAt")
+
+                VALUES
+
+                ${Prisma.join(values)}
+
+                ON CONFLICT ("eventTypeId","startAt","endAt")
+
+                DO UPDATE
+
+                SET
+
+                status = EXCLUDED.status
+            
+
+    `;
+    
+    await prisma.$executeRaw(query);
+    
+}
+
 
 export async function findFutureSlotsByEventTypeInRange(
     eventTypeId: number,
