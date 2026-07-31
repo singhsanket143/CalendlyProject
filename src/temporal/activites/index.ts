@@ -1,4 +1,4 @@
-import { sendBookingConfirmationEmail } from "../../mailer/booking.mailer.js";
+import { sendBookingConfirmationEmail, sendCancelBookingConfirmationEmail } from "../../mailer/booking.mailer.js";
 import { updateBookingCalendarDetails } from "../../repositories/booking.repository.js";
 import {
     createGoogleCalendarEvent,
@@ -14,6 +14,11 @@ export async function regenerateHostSlotsActivity(input: RegenerateHostSlotsInpu
 export async function sendBookingConfirmationEmailActivity(bookingId: number) {
     await sendBookingConfirmationEmail(bookingId);
 }
+
+export async function sendCancelBookingNotificationActivity(bookingId: number) {
+    await sendCancelBookingConfirmationEmail(bookingId);
+}
+
 
 export async function createGoogleCalendarEventActivity(bookingId: number) {
     if (!isProjectCalendarConfigured()) {
