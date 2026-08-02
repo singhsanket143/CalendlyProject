@@ -5,6 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "build": "prisma generate && tsc",
+    "start": "node dist/src/server.js",
+    "start:worker": "node dist/src/temporal/worker.js",
     "dev": "nodemon --watch src --ext ts --exec 'tsx src/server.ts'",
     "dev:worker": "nodemon --watch src --ext ts --exec 'tsx src/temporal/worker.ts'",
     "prisma:format": "npx prisma format",

@@ -9,7 +9,7 @@ import {
     markSlotBookedIfAvailable,
 } from "../repositories/slot.repository.js";
 import { badRequest, notFound } from "../utils/api-error.js";
-import type { Booking, Slot } from "../../generated/prisma/client.js";
+import type { Slot } from "../../generated/prisma/client.js";
 import {
     startCreateGoogleCalendarEventWorkflow,
     startRegenerateHostSlotsWorkflow,
